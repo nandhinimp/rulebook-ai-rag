@@ -5,3 +5,4 @@ pypdf
 python-multipart
 sentence-transformers
 # scikit-learn
+requests
