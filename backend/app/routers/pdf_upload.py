@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from pypdf import PdfReader  # type: ignore
+from pypdf import PdfReader
 from app.utils.chunker import chunk_text
 
 router = APIRouter(prefix="/pdf", tags=["PDF"])
@@ -10,18 +10,26 @@ async def upload_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
     reader = PdfReader(file.file)
-    full_text = ""
+    all_chunks = []
 
-    for page in reader.pages:
-        text = page.extract_text()
-        if text:
-            full_text += text + "\n"
+    for page_index, page in enumerate(reader.pages):
+        page_text = page.extract_text()
 
-    chunks = chunk_text(full_text)
+        if not page_text:
+            continue
+
+        page_chunks = chunk_text(page_text)
+
+        for chunk in page_chunks:
+            all_chunks.append({
+                "page": page_index + 1,
+                "chunk_id": chunk["chunk_id"],
+                "text": chunk["text"]
+            })
 
     return {
         "filename": file.filename,
         "pages": len(reader.pages),
-        "total_chunks": len(chunks),
-        "sample_chunk": chunks[0][:300]  # preview
+        "total_chunks": len(all_chunks),
+        "sample_chunk": all_chunks[0]
     }
