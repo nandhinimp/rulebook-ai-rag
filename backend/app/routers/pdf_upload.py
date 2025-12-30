@@ -1,11 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pypdf import PdfReader
+
 from app.utils.chunker import chunk_text
-from app.services.embedding_pipeline import embed_chunks
-from app.services.vector_store import add_chunk
+from app.services.embeddings import get_embedding
+from app.services.store import VECTOR_STORE
 
 
 router = APIRouter(prefix="/pdf", tags=["PDF"])
+
 
 @router.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
@@ -13,39 +15,29 @@ async def upload_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
     reader = PdfReader(file.file)
-    all_chunks = []
+    chunk_id = 0
 
-    for page_index, page in enumerate(reader.pages):
-        page_text = page.extract_text()
-
-        if not page_text:
+    for page_num, page in enumerate(reader.pages, start=1):
+        text = page.extract_text()
+        if not text:
             continue
 
-        page_chunks = chunk_text(page_text)
+        chunks = chunk_text(text)
 
-        for chunk in page_chunks:
-            all_chunks.append({
-                "page": page_index + 1,
-                "chunk_id": chunk["chunk_id"],
-                "text": chunk["text"]
+        for chunk in chunks:
+            embedding = get_embedding(chunk["text"])
+
+            VECTOR_STORE.append({
+                "text": chunk["text"],
+                "page": page_num,
+                "chunk_id": chunk_id,
+                "embedding": embedding
             })
 
-    embedded_chunks = embed_chunks(all_chunks)
-
-    for chunk in embedded_chunks:
-        add_chunk(
-            chunk_id=chunk["chunk_id"],
-            page=chunk["page"],
-            text=chunk["text"],
-            embedding=chunk["embedding"]
-        )
+            chunk_id += 1
 
     return {
         "filename": file.filename,
-        "total_chunks": len(embedded_chunks),
-        "sample": {
-            "page": embedded_chunks[0]["page"],
-            "chunk_id": embedded_chunks[0]["chunk_id"],
-            "embedding_dim": len(embedded_chunks[0]["embedding"])
-        }
+        "total_chunks": len(VECTOR_STORE),
+        "sample": VECTOR_STORE[0] if VECTOR_STORE else None
     }
