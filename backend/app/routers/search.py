@@ -5,12 +5,12 @@ router = APIRouter()
 
 
 @router.post("/search")
-def semantic_search(query: str):
+def search(query: str):
     return semantic_search_service(query)
 
 
 @router.post("/ask")
-def ask_question(query: str):
+def ask(query: str):
     results = semantic_search_service(query)
 
     if not results:
@@ -20,10 +20,8 @@ def ask_question(query: str):
             "sources": []
         }
 
-    contexts = "\n\n".join(r["text"] for r in results)
-
     return {
         "query": query,
-        "answer": contexts,
+        "answer": "\n\n".join(r["text"] for r in results),
         "sources": [r["page"] for r in results]
     }

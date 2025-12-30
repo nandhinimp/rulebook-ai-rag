@@ -1,4 +1,4 @@
-from app.services.store import VECTOR_STORE
+from app.config import VECTOR_STORE
 from app.services.embeddings import get_embedding
 import numpy as np
 

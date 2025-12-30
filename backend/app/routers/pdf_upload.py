@@ -1,19 +1,22 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile
 from pypdf import PdfReader
 
-from app.utils.chunker import chunk_text
+from app.config import VECTOR_STORE
 from app.services.embeddings import get_embedding
-from app.services.store import VECTOR_STORE
+
+router = APIRouter()
 
 
-router = APIRouter(prefix="/pdf", tags=["PDF"])
+def split_text(text, chunk_size=500):
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size):
+        chunks.append(" ".join(words[i:i + chunk_size]))
+    return chunks
 
 
-@router.post("/upload")
-async def upload_pdf(file: UploadFile = File(...)):
-    if not file.filename.endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files allowed")
-
+@router.post("/pdf/upload")
+def upload_pdf(file: UploadFile):
     reader = PdfReader(file.file)
     chunk_id = 0
 
@@ -22,18 +25,15 @@ async def upload_pdf(file: UploadFile = File(...)):
         if not text:
             continue
 
-        chunks = chunk_text(text)
+        chunks = split_text(text)
 
         for chunk in chunks:
-            embedding = get_embedding(chunk["text"])
-
             VECTOR_STORE.append({
-                "text": chunk["text"],
+                "text": chunk,
                 "page": page_num,
                 "chunk_id": chunk_id,
-                "embedding": embedding
+                "embedding": get_embedding(chunk)
             })
-
             chunk_id += 1
 
     return {
