@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pypdf import PdfReader
 from app.utils.chunker import chunk_text
+from app.services.embedding_pipeline import embed_chunks
 
 router = APIRouter(prefix="/pdf", tags=["PDF"])
 
@@ -27,9 +28,14 @@ async def upload_pdf(file: UploadFile = File(...)):
                 "text": chunk["text"]
             })
 
+    embedded_chunks = embed_chunks(all_chunks)
+
     return {
         "filename": file.filename,
-        "pages": len(reader.pages),
-        "total_chunks": len(all_chunks),
-        "sample_chunk": all_chunks[0]
+        "total_chunks": len(embedded_chunks),
+        "sample": {
+            "page": embedded_chunks[0]["page"],
+            "chunk_id": embedded_chunks[0]["chunk_id"],
+            "embedding_dim": len(embedded_chunks[0]["embedding"])
+        }
     }
