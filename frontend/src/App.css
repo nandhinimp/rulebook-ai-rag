@@ -1,0 +1,38 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.card h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -6,3 +6,13 @@ pdfplumber
 python-multipart
 numpy
 requests
+
+chromadb
+llama-index
+langchain
+langgraph
+arize-phoenix
+pymongo
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
