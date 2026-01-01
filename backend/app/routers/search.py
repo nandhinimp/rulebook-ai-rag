@@ -6,24 +6,46 @@ router = APIRouter()
 
 @router.post("/search")
 def semantic_search(query: str):
-    return semantic_search_service(query)
+    """Search for relevant chunks across all uploaded PDFs."""
+    results = semantic_search_service(query)
+    return {
+        "query": query,
+        "results": results,
+        "count": len(results)
+    }
 
 
 @router.post("/ask")
 def ask_question(query: str):
-    results = semantic_search_service(query)
+    """Ask a question and get an answer with citations from PDFs."""
+    results = semantic_search_service(query, top_k=5)  # Get top 5, then filter strictly
 
     if not results:
         return {
             "query": query,
-            "answer": "Not found in document",
+            "answer": "Information not found in uploaded documents",
             "sources": []
         }
 
-    contexts = "\n\n".join(r["text"] for r in results)
+    # Return only the BEST matching chunk (highest relevance score)
+    if results:
+        top_result = results[0]  # Only the best match
+        answer = top_result["text"]
+        sources = [{
+            "document": top_result["doc_id"],
+            "page": top_result["page"],
+            "heading": top_result["heading"],
+            "score": round(top_result["score"], 3)
+        }]
 
+        return {
+            "query": query,
+            "answer": answer,
+            "sources": sources
+        }
+    
     return {
         "query": query,
-        "answer": contexts,
-        "sources": [r["page"] for r in results]
+        "answer": "No matching information found for this query",
+        "sources": []
     }

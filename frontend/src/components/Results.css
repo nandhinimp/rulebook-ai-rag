@@ -1,0 +1,46 @@
+.results {
+  margin-top: 30px;
+}
+
+.result-item {
+  background: #f9f9f9;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-left: 4px solid #667eea;
+  border-radius: 5px;
+}
+
+.result-item.answer {
+  background: #f0f7ff;
+  border-left-color: #2196f3;
+}
+
+.result-query {
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.95em;
+  margin-bottom: 10px;
+}
+
+.result-text {
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.result-sources {
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.source-tag {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 5px 10px;
+  margin: 5px 5px 5px 0;
+  border-radius: 4px;
+  font-size: 0.85em;
+}

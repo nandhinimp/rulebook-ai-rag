@@ -1,24 +1,20 @@
-from app.services.store import VECTOR_STORE
-from app.services.embeddings import get_embedding
-import numpy as np
-
-
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+from app.services.chroma_store import search as chroma_search
+from app.services.embeddings import get_embedding_or_mock
 
 
 def semantic_search_service(query: str, top_k: int = 3):
-    query_embedding = get_embedding(query)
-
-    results = []
-
-    for item in VECTOR_STORE:
-        score = cosine_similarity(query_embedding, item["embedding"])
-        results.append({
-            "text": item["text"],
-            "page": item["page"],
-            "score": float(score)
-        })
-
-    results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:top_k]
+    """Search for relevant chunks in Chroma vector store."""
+    query_embedding = get_embedding_or_mock(query)
+    results = chroma_search(query_embedding, top_k=top_k)
+    
+    # Format results for API response
+    return [
+        {
+            "text": r["text"],
+            "page": r["page"],
+            "heading": r["heading"],
+            "doc_id": r["doc_id"],
+            "score": float(r["score"])
+        }
+        for r in results
+    ]
